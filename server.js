@@ -10,8 +10,8 @@ const _ = require("lodash");
 const path = require("path");
 const axios = require("axios").default;
 
-const SOCKET = "192.168.18.141:3021";
-const IP = "192.168.18.141";
+const SOCKET = "192.168.18.159:3021";
+const IP = "192.168.18.159";
 const VARPORT = "3020";
 
 var corsOptions = {
@@ -532,7 +532,7 @@ app.delete("/delete/:id&:db&:champ", (req, resu) => {
 });
 
 // RECHERCHER DU TEXT DANS UN PDF
-app.get("/extract-text/:techno/:searched", (req, resu) => {
+app.get("/extract-text/:techno", (req, resu) => {
   // RAJOUT TECHNO
   pool.getConnection().then((conn) => {
     conn
@@ -573,40 +573,49 @@ app.get("/extract-text/:techno/:searched", (req, resu) => {
                 varTab = [];
                 varTab2 = [];
                 varBool = textLower.includes(
-                  req.params.searched.toLocaleLowerCase()
+                  req.query.search.toLocaleLowerCase()
                 );
 
-                for (let i = 0; i < textSplited.length; i++) {
-                  textparsed = textSplited[i].search(
-                    req.params.searched.toLocaleLowerCase()
-                  );
-                  if (textparsed !== -1) {
-                    flag = false;
-                    j = i;
-                    while (!flag) {
-                      varPoint = textSplited[j].search("\\.");
-                      if (varPoint !== -1) {
-                        varTab.push(textSplited[j].slice(0, varPoint + 1));
-                        flag = !flag;
-                      } else {
-                        varTab.push(textSplited[j]);
-                      }
-                      j++;
-                    }
-                    if (varTab2.length > 10) {
-                      break;
-                    } else {
-                      varTab2[i] = varTab.join(" ");
-                      varTab = [];
-                    }
-                  }
-                  if (!searchTitle && varTab2.length !== 0) {
-                    textparsed = textSplited[i].search("[a-z]");
+                try {
+                  for (let i = 0; i < textSplited.length; i++) {
+                    textparsed = textSplited[i].search(
+                      req.query.search.toLocaleLowerCase()
+                    );
                     if (textparsed !== -1) {
-                      varTitle = textSplited[i];
-                      searchTitle = !searchTitle;
+                      flag = false;
+                      j = i;
+                      while (!flag) {
+                        varPoint = textSplited[j].search("\\.");
+                        if (varPoint !== -1) {
+                          varTab.push(textSplited[j].slice(0, varPoint + 1));
+                          flag = !flag;
+                        } else {
+                          varTab.push(textSplited[j]);
+                        }
+                        j++;
+                      }
+                      if (varTab2.length > 10) {
+                        break;
+                      } else {
+                        varTab2[i] = varTab.join(" ");
+                        varTab = [];
+                      }
+                    }
+                    console.log("vartab2 :", varTab2);
+                    console.log("textsplitted :", textSplited);
+
+                    if (!searchTitle && varTab2.length === 0) {
+                      textparsed = textSplited[i].search("[a-z]");
+                      console.log(textparsed);
+                      if (textparsed !== -1) {
+                        varTitle = textSplited[i];
+                        console.log(varTitle);
+                        searchTitle = !searchTitle;
+                      }
                     }
                   }
+                } catch (error) {
+                  console.log(error);
                 }
 
                 var filtered = varTab2.filter(function (el) {
